@@ -1,0 +1,1328 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>corda</title>
+  <style>
+    :root {
+      --black: #050505;
+      --white: #fff;
+      --blue: #102ac5;
+      --muted: #bdbdbd;
+      --ink: #171717;
+      --surface: #f7f7f7;
+      --ease: cubic-bezier(.22, .61, .36, 1);
+      --font: "Helvetica Neue", Arial, "Noto Sans KR", sans-serif;
+    }
+
+    * { box-sizing: border-box; }
+
+    html {
+      scroll-behavior: smooth;
+      background: var(--white);
+    }
+
+    body {
+      margin: 0;
+      font-family: var(--font);
+      color: var(--ink);
+      background: var(--white);
+      overflow-x: hidden;
+    }
+
+    a { color: inherit; text-decoration: none; }
+    button { font: inherit; color: inherit; }
+
+    .site-nav {
+      position: fixed;
+      top: 0;
+      left: 0;
+      right: 0;
+      z-index: 50;
+      height: 112px;
+      display: grid;
+      grid-template-columns: 1fr auto 1fr;
+      align-items: start;
+      padding: 39px clamp(22px, 4vw, 48px) 0;
+      pointer-events: none;
+    }
+
+    .logo {
+      grid-column: 2;
+      width: clamp(80px, 8vw, 120px);
+      position: relative;
+      pointer-events: auto;
+      line-height: 0;
+    }
+
+    .logo-v {
+      display: block;
+      width: 100%;
+      height: auto;
+    }
+
+    .logo-v--white {
+      position: absolute;
+      top: 0; left: 0;
+      opacity: 0;
+    }
+
+    .menu-button {
+      grid-column: 3;
+      justify-self: end;
+      width: 37px;
+      height: 29px;
+      display: grid;
+      gap: 8px;
+      padding: 0;
+      border: 0;
+      background: transparent;
+      cursor: pointer;
+      pointer-events: auto;
+    }
+
+    .menu-button span {
+      display: block;
+      width: 100%;
+      height: 3px;
+      background: var(--black);
+      transition: transform .25s var(--ease), opacity .2s var(--ease);
+      transform-origin: center;
+    }
+
+    .menu-button:focus,
+    .menu-button:focus-visible {
+      outline: none;
+    }
+
+    .menu-layer {
+      position: fixed;
+      inset: 0;
+      z-index: 40;
+      background: var(--white);
+      opacity: 0;
+      visibility: hidden;
+      pointer-events: none;
+      transition: opacity .22s var(--ease), visibility .22s var(--ease);
+    }
+
+    .menu-layer.is-open {
+      opacity: 1;
+      visibility: visible;
+      pointer-events: auto;
+    }
+
+    .menu-list {
+      position: absolute;
+      top: 91px;
+      right: clamp(27px, 4vw, 50px);
+      width: min(270px, calc(100vw - 54px));
+      display: flex;
+      flex-direction: column;
+      align-items: flex-end;
+      gap: 10px;
+      text-align: right;
+      font-size: clamp(20px, 2.05vw, 27px);
+      line-height: 1.32;
+      letter-spacing: 0;
+    }
+
+    .menu-primary {
+      display: block;
+      color: var(--blue);
+      font-weight: 500;
+    }
+
+    .menu-sub {
+      display: block;
+      color: #c8c8c8;
+      font-weight: 400;
+    }
+
+    .menu-story {
+      display: block;
+      color: var(--blue);
+      font-weight: 500;
+    }
+
+    .menu-list img {
+      display: block;
+      height: auto;
+      margin-left: auto;
+    }
+
+    .menu-primary img,
+    .menu-story img {
+      width: clamp(150px, 10.4vw, 194px);
+    }
+
+    .menu-sub img {
+      width: clamp(118px, 7.8vw, 146px);
+    }
+
+    .intro-scroll {
+      height: 300vh;
+      position: relative;
+      background: var(--white);
+    }
+
+    .intro-pin {
+      position: sticky;
+      top: 0;
+      height: 100vh;
+      min-height: 620px;
+      overflow: hidden;
+      background: var(--white);
+    }
+
+    .seed-rain {
+      position: absolute;
+      inset: 0;
+      z-index: 6;
+      width: 100%;
+      height: 100%;
+      pointer-events: none;
+    }
+
+    .seed {
+      position: absolute;
+      top: 50%;
+      left: 50%;
+      z-index: 4;
+      width: min(138vw, 1661px);
+      max-width: none;
+      transform: translate(-50%, -50%);
+      transform-origin: center;
+      will-change: opacity;
+    }
+
+    .slogan {
+      position: absolute;
+      top: 50%;
+      left: 50%;
+      z-index: 3;
+      width: min(33vw, 360px);
+      min-width: 240px;
+      transform: translate(-50%, -50%);
+      opacity: 0;
+      will-change: opacity, transform;
+    }
+
+    .business {
+      min-height: 100vh;
+      padding: 153px clamp(24px, 5vw, 88px) 104px;
+      background: var(--white);
+    }
+
+    .business-title {
+      margin: 0 0 65px;
+      color: var(--blue);
+      text-align: center;
+      font-size: clamp(18px, 1.65vw, 23px);
+      line-height: 1;
+      font-weight: 500;
+      letter-spacing: 0;
+    }
+
+    .business-title img {
+      display: block;
+      width: clamp(128px, 11vw, 166px);
+      height: auto;
+      margin: 0 auto;
+    }
+
+    .business-grid {
+      display: grid;
+      grid-template-columns: repeat(2, minmax(0, 1fr));
+      gap: clamp(32px, 4.2vw, 50px);
+      width: min(1060px, 100%);
+      margin: 0 auto;
+    }
+
+    .business-card {
+      min-width: 0;
+      display: block;
+      position: relative;
+      cursor: pointer;
+    }
+
+    .business-photo {
+      position: relative;
+      overflow: hidden;
+      border-radius: 8px;
+      background: #f5f5f5;
+    }
+
+    .business-photo > img {
+      display: block;
+      width: 100%;
+      height: auto;
+    }
+
+    .business-hover {
+      position: absolute;
+      inset: 0;
+      display: block;
+      width: 100%;
+      height: 100%;
+      object-fit: cover;
+      opacity: 0;
+      pointer-events: none;
+      transition: opacity .22s ease;
+    }
+
+    .business-card:hover .business-hover {
+      opacity: 1;
+    }
+
+    .footer {
+      background: #f5f5f5;
+      overflow: hidden;
+    }
+
+    .footer img {
+      display: block;
+      width: 100%;
+      height: auto;
+    }
+
+    .connection-scroll {
+      height: 660vh;
+      position: relative;
+      background: var(--white);
+    }
+
+    .connection-pin {
+      position: sticky;
+      top: 0;
+      height: 100vh;
+      min-height: 620px;
+      overflow: hidden;
+      background: var(--white);
+    }
+
+    .conn-stage {
+      position: absolute;
+      left: calc(50% + min(24vw, 420px));
+      top: 50%;
+      transform: translate(-50%, -50%);
+      transform-origin: 51.4% 78.2%;
+      width: clamp(760px, 56vw, 1080px);
+      aspect-ratio: 251 / 363;
+      pointer-events: none;
+    }
+
+    .conn-thread {
+      position: absolute;
+      top: 0;
+      left: 0;
+      width: 100%;
+      height: auto;
+      clip-path: inset(0 0 100% 0);
+      will-change: clip-path;
+    }
+
+    .conn-dot {
+      position: absolute;
+      width: clamp(30px, 2.2vw, 44px);
+      aspect-ratio: 1;
+      border-radius: 50%;
+      background: var(--black);
+      transform: translate(-50%, -50%) scale(0);
+      opacity: 0;
+    }
+
+    .conn-dot:nth-child(2) { display: none; }
+    .conn-dot:nth-child(3) { left: 57.4%; top: 26%; }
+    .conn-dot:nth-child(4) { left: 60.6%; top: 36.7%; }
+    .conn-dot:nth-child(5) { left: 64.6%; top: 55.7%; }
+    .conn-dot:nth-child(6) { left: 23.9%; top: 50.6%; }
+    .conn-dot:nth-child(7) { left: 25.5%; top: 64.3%; }
+    .conn-dot:nth-child(8) { left: 33%; top: 68%; }
+    .conn-dot:nth-child(9) { left: 51.4%; top: 78.2%; }
+
+    .conn-change-seed {
+      position: absolute;
+      left: 51.4%;
+      top: 78.2%;
+      width: 10.5%;
+      height: auto;
+      opacity: 0;
+      pointer-events: none;
+      transform: translate(-50%, -50%);
+      transform-origin: 50% 50%;
+    }
+
+    .conn-change-seed.is-wide {
+      width: 14%;
+    }
+
+    .conn-text,
+    .manifesto-text,
+    .manifesto-second,
+    .manifesto-third {
+      position: absolute;
+      left: calc(50% - min(40vw, 760px));
+      top: 50%;
+      transform: translateY(-50%);
+      width: min(42vw, 540px);
+      min-width: 340px;
+      opacity: 0;
+      will-change: opacity, transform;
+    }
+
+    .manifesto-text,
+    .manifesto-second,
+    .manifesto-third {
+      width: min(44vw, 560px);
+    }
+
+    .restore-scene {
+      position: absolute;
+      inset: 0;
+      opacity: 0;
+      pointer-events: none;
+    }
+
+    .restore-copy {
+      position: absolute;
+      left: 50%;
+      top: 52%;
+      width: min(38vw, 520px);
+      transform: translate(-50%, -50%);
+      opacity: 0;
+      z-index: 2;
+    }
+
+    .restore-canvas {
+      position: absolute;
+      inset: 0;
+      width: 100%;
+      height: 100%;
+      z-index: 3;
+    }
+
+    @media (min-width: 761px) and (max-width: 1120px) {
+      .conn-stage {
+        --conn-stage-size: clamp(520px, 52vw, 660px);
+        left: calc(100% - 22px - (var(--conn-stage-size) / 2));
+        top: 54%;
+        width: var(--conn-stage-size);
+      }
+
+      .conn-text,
+      .manifesto-text,
+      .manifesto-second,
+      .manifesto-third {
+        left: clamp(56px, 8vw, 96px);
+        width: min(42vw, 480px);
+        min-width: 0;
+      }
+
+    }
+
+    @media (min-width: 761px) and (max-width: 860px) {
+      .conn-stage {
+        --conn-stage-size: clamp(460px, 58vw, 520px);
+      }
+
+      .conn-text,
+      .manifesto-text,
+      .manifesto-second,
+      .manifesto-third {
+        width: min(40vw, 340px);
+      }
+
+    }
+
+    @media (max-width: 760px) {
+      .site-nav {
+        height: 88px;
+        padding-top: 30px;
+      }
+
+      .menu-button {
+        width: 30px;
+        height: 24px;
+        gap: 6px;
+      }
+
+      .menu-button span { height: 2px; }
+
+      .menu-list {
+        top: 80px;
+        font-size: 21px;
+      }
+
+      .intro-pin {
+        min-height: 540px;
+      }
+
+      .seed {
+        width: 178vw;
+      }
+
+      .slogan {
+        width: 64vw;
+        min-width: 0;
+      }
+
+      .business {
+        padding-top: 128px;
+      }
+
+      .business-grid {
+        grid-template-columns: 1fr;
+        gap: 36px;
+      }
+
+      .conn-stage {
+        width: 118vw;
+        left: 66%;
+        transform: translate(-50%, -50%);
+      }
+
+      .conn-text,
+      .manifesto-text,
+      .manifesto-second,
+      .manifesto-third {
+        left: 9vw;
+        top: 14%;
+        transform: none;
+        width: min(78vw, 390px);
+        min-width: 0;
+      }
+
+    }
+
+    @media (orientation: landscape) and (max-height: 520px) {
+      .conn-stage {
+        height: 116vh;
+        width: auto;
+        left: 68%;
+        transform: translate(-50%, -50%);
+      }
+
+      .conn-text,
+      .manifesto-text,
+      .manifesto-second,
+      .manifesto-third {
+        left: clamp(40px, 9vw, 140px);
+        top: 50%;
+        transform: translateY(-50%);
+        width: min(42vw, 520px);
+        min-width: 300px;
+      }
+    }
+
+    .hero-scroll {
+      height: 300vh;
+      position: relative;
+    }
+
+    .hero-pin {
+      position: sticky;
+      top: 0;
+      height: 100vh;
+      overflow: hidden;
+      background: var(--white);
+    }
+
+    .hero-video-wrap {
+      position: absolute;
+      inset: 15vh 14vw;
+      border-radius: 20px;
+      overflow: hidden;
+      opacity: 0;
+      will-change: inset, border-radius, opacity;
+    }
+
+    .hero-video {
+      width: 100%;
+      height: 100%;
+      object-fit: cover;
+      display: block;
+      pointer-events: none;
+    }
+
+    .play-btn {
+      position: absolute;
+      top: 50%;
+      left: 50%;
+      transform: translate(-50%, -50%);
+      width: clamp(200px, 22vw, 300px);
+      z-index: 2;
+      cursor: pointer;
+      background: none;
+      border: none;
+      padding: 0;
+    }
+
+    .play-default,
+    .play-hover {
+      display: block;
+      width: 100%;
+      height: auto;
+      transition: opacity 0.22s ease;
+    }
+
+    .play-hover {
+      position: absolute;
+      top: 0;
+      left: 0;
+      opacity: 0;
+    }
+
+    .play-btn:hover .play-hover { opacity: 1; }
+    .play-btn:hover .play-default { opacity: 0; }
+
+    .hero-video-wrap.is-expanding {
+      transition: inset 0.75s cubic-bezier(.22,.61,.36,1), border-radius 0.75s cubic-bezier(.22,.61,.36,1);
+    }
+  </style>
+</head>
+<body>
+  <nav class="site-nav" aria-label="Main">
+    <a class="logo" href="#top" aria-label="corda home">
+      <img class="logo-v logo-v--black" src="pdf/logo_black.svg" alt="corda">
+      <img class="logo-v logo-v--white" src="pdf/logo_white.svg" alt="">
+    </a>
+    <button class="menu-button" type="button" aria-label="메뉴 열기" aria-expanded="false" aria-controls="menu-layer">
+      <span></span>
+      <span></span>
+      <span></span>
+    </button>
+  </nav>
+
+  <div class="menu-layer" id="menu-layer" aria-hidden="true">
+    <div class="menu-list">
+      <a class="menu-primary" href="#our-business" aria-label="our business"><img src="pdf/Our business.svg" alt=""></a>
+      <a class="menu-sub" href="stockist.html" aria-label="corda shop"><img src="pdf/corda shop_grey.svg" alt=""></a>
+      <a class="menu-sub" href="#corda-cycle" aria-label="corda cycle"><img src="pdf/corda cycle_grey.svg" alt=""></a>
+      <a class="menu-story" href="#brand-story" aria-label="brand story"><img src="pdf/brand story.svg" alt=""></a>
+    </div>
+  </div>
+
+  <main id="top">
+    <section class="intro-scroll" id="brand-story" aria-label="brand story">
+      <div class="intro-pin">
+        <svg class="seed" viewBox="0 0 99 59" fill="none" xmlns="http://www.w3.org/2000/svg" aria-hidden="true">
+          <path d="M0.029289 26.8777C-0.340711 23.2377 2.88927 18.7077 4.38927 15.8577C10.9193 3.45773 22.8193 -0.982327 35.8693 0.177673C52.6893 1.66767 71.0693 -3.71232 84.0793 9.86768C94.0693 20.2877 101.109 29.7277 96.6393 43.1577C93.3493 53.0477 86.3593 58.2177 76.2493 58.4177C59.4593 58.7577 43.7493 55.0877 28.2793 48.5377L12.2194 41.7277C6.16935 39.1677 0.829279 34.7177 0.0192792 26.8877V26.8677L0.029289 26.8777Z" fill="black"/>
+        </svg>
+        <canvas class="seed-rain" aria-hidden="true"></canvas>
+        <img class="slogan" src="pdf/slogan.svg" alt="One Return, Another Beginning">
+      </div>
+    </section>
+
+    <section class="connection-scroll" id="connection" aria-label="brand connection">
+      <div class="connection-pin">
+        <div class="conn-stage">
+          <img class="conn-thread" src="pdf/plus.svg" alt="">
+          <span class="conn-dot" aria-hidden="true"></span>
+          <span class="conn-dot" aria-hidden="true"></span>
+          <span class="conn-dot" aria-hidden="true"></span>
+          <span class="conn-dot" aria-hidden="true"></span>
+          <span class="conn-dot" aria-hidden="true"></span>
+          <span class="conn-dot" aria-hidden="true"></span>
+          <span class="conn-dot" aria-hidden="true"></span>
+          <span class="conn-dot" aria-hidden="true"></span>
+          <img class="conn-change-seed seed-two" src="pdf/change seed_2.svg" alt="">
+          <img class="conn-change-seed seed-three is-wide" src="pdf/change seed.svg" alt="">
+        </div>
+        <img class="conn-text" src="pdf/text_1.svg" alt="Corda starts from mending the disconnected flow of garment">
+        <img class="manifesto-text" src="pdf/manifesto.svg" alt="corda manifesto">
+        <img class="manifesto-second" src="pdf/manifeto_2.svg" alt="corda manifesto">
+        <img class="manifesto-third" src="pdf/manifesto_3.svg" alt="corda manifesto">
+        <div class="restore-scene" aria-hidden="true">
+          <img class="restore-copy" src="pdf/manifesto_4.svg" alt="">
+          <canvas class="restore-canvas"></canvas>
+        </div>
+      </div>
+    </section>
+
+    <section class="hero-scroll" aria-label="brand film">
+      <div class="hero-pin">
+        <div class="hero-video-wrap">
+          <video class="hero-video" src="hero.mp4" autoplay muted loop playsinline></video>
+          <button class="play-btn" type="button" aria-label="영상 재생">
+            <img class="play-default" src="pdf/play_button.svg" alt="">
+            <img class="play-hover" src="pdf/play_button_2.svg" alt="">
+          </button>
+        </div>
+      </div>
+    </section>
+
+    <section class="business" id="our-business" aria-label="Our Business">
+      <h1 class="business-title"><img src="pdf/Our business.svg" alt="Our Business"></h1>
+      <div class="business-grid">
+        <a class="business-card business-card--shop" href="stockist.html" id="corda-shop">
+          <div class="business-photo">
+            <img src="pdf/corda shop_img 복사본.svg" alt="corda shop">
+            <img class="business-hover" src="pdf/corda shop_hover.svg" alt="">
+          </div>
+        </a>
+
+        <a class="business-card business-card--cycle" href="cycle.html" id="corda-cycle">
+          <div class="business-photo">
+            <img src="pdf/corda cycle_img 복사본.svg" alt="corda cycle">
+            <img class="business-hover" src="pdf/corda cycle_hover.svg" alt="">
+          </div>
+        </a>
+      </div>
+    </section>
+  </main>
+
+  <footer class="footer">
+    <img src="pdf/footer.svg" alt="corda footer">
+  </footer>
+
+  <script src="matter.min.js"></script>
+  <script>
+    if (!window.Matter && typeof module === 'object' && module.exports) {
+      window.Matter = module.exports;
+    }
+    document.documentElement.dataset.physicsEngine = window.Matter ? 'matter' : 'fallback';
+    if (!window.Matter) {
+      window.Matter = (() => {
+        const call = (engine, name) => (engine.events[name] || []).forEach((fn) => fn());
+        const Engine = {
+          create: () => ({ world: { bodies: [] }, gravity: { y: 1 }, events: {} })
+        };
+        const Runner = {
+          create: () => ({}),
+          run: (runner, engine) => {
+            runner.id = window.setInterval(() => {
+              call(engine, 'beforeUpdate');
+              engine.world.bodies.forEach((body) => {
+                if (body.isStatic) return;
+                body.velocity.y += engine.gravity.y * 0.38;
+                body.velocity.x *= 0.994;
+                body.velocity.y *= 0.994;
+                body.angularVelocity *= 0.985;
+                body.position.x += body.velocity.x;
+                body.position.y += body.velocity.y;
+                body.angle += body.angularVelocity;
+
+                engine.world.bodies.forEach((staticBody) => {
+                  if (!staticBody.isStatic || !staticBody.isGround) return;
+                  const top = staticBody.position.y - staticBody.height / 2;
+                  if (body.position.y + body.circleRadius > top && Math.abs(body.position.x - staticBody.position.x) < staticBody.width / 2) {
+                    body.position.y = top - body.circleRadius;
+                    body.velocity.y *= -body.restitution;
+                    body.velocity.x *= 0.82;
+                  }
+                });
+              });
+            }, 1000 / 60);
+          }
+        };
+        const Bodies = {
+          circle: (x, y, radius, options = {}) => ({
+            position: { x, y },
+            velocity: { x: 0, y: 0 },
+            angle: 0,
+            angularVelocity: 0,
+            circleRadius: radius,
+            restitution: options.restitution ?? 0.4,
+            isStatic: false,
+            label: options.label || ''
+          }),
+          rectangle: (x, y, width, height, options = {}) => ({
+            position: { x, y },
+            width,
+            height,
+            angle: options.angle || 0,
+            isStatic: !!options.isStatic,
+            isGround: true
+          })
+        };
+        const Body = {
+          setAngle: (body, angle) => { body.angle = angle; },
+          setVelocity: (body, velocity) => { body.velocity = velocity; },
+          setAngularVelocity: (body, value) => { body.angularVelocity = value; }
+        };
+        const World = {
+          add: (world, bodies) => {
+            (Array.isArray(bodies) ? bodies : [bodies]).forEach((body) => world.bodies.push(body));
+          }
+        };
+        const Events = {
+          on: (engine, name, fn) => {
+            engine.events[name] = engine.events[name] || [];
+            engine.events[name].push(fn);
+          }
+        };
+        return { Engine, Runner, World, Bodies, Body, Events };
+      })();
+      document.documentElement.dataset.physicsEngine = 'fallback-ready';
+    }
+  </script>
+  <script>
+    const intro = document.querySelector('.intro-scroll');
+    const seed = document.querySelector('.seed');
+    const slogan = document.querySelector('.slogan');
+    const seedRainCanvas = document.querySelector('.seed-rain');
+    const menuButton = document.querySelector('.menu-button');
+    const menuLayer = document.querySelector('.menu-layer');
+    const menuLinks = [...menuLayer.querySelectorAll('a')];
+
+    const connSection = document.querySelector('.connection-scroll');
+    const connStage = document.querySelector('.conn-stage');
+    const connThread = document.querySelector('.conn-thread');
+    const connText = document.querySelector('.conn-text');
+    const manifestoText = document.querySelector('.manifesto-text');
+    const manifestoSecond = document.querySelector('.manifesto-second');
+    const manifestoThird = document.querySelector('.manifesto-third');
+    const seedTwo = document.querySelector('.seed-two');
+    const seedThree = document.querySelector('.seed-three');
+    const restoreScene = document.querySelector('.restore-scene');
+    const restoreCopy = document.querySelector('.restore-copy');
+    const restoreCanvas = document.querySelector('.restore-canvas');
+    const connDots = [...document.querySelectorAll('.conn-dot')];
+    const heroSection = document.querySelector('.hero-scroll');
+    const heroPin = document.querySelector('.hero-pin');
+    const heroWrap = document.querySelector('.hero-video-wrap');
+    const heroVideo = document.querySelector('.hero-video');
+    const playBtn = document.querySelector('.play-btn');
+    const logoBlack = document.querySelector('.logo-v--black');
+    const logoWhite = document.querySelector('.logo-v--white');
+    const menuLines = [...document.querySelectorAll('.menu-button span')];
+    let heroExpanded = false;
+    let heroAudioOn = false;
+    let heroAudioStartY = 0;
+    const restoreSeedImages = [
+      'pdf/graphic.svg',
+      'pdf/Vector.svg',
+      'pdf/Vector-1.svg',
+      'pdf/Vector-2.svg',
+      'pdf/Vector-3.svg',
+      'pdf/Vector-4.svg',
+      'pdf/Vector-5.svg'
+    ].map((src) => {
+      const image = new Image();
+      image.src = src;
+      return image;
+    });
+
+    const clamp = (value, min = 0, max = 1) => Math.min(max, Math.max(min, value));
+    const lerp = (from, to, t) => from + (to - from) * t;
+    const range = (progress, start, end) => clamp((progress - start) / (end - start));
+
+    function drawHero() {
+      if (!heroSection) return;
+      const rect = heroSection.getBoundingClientRect();
+      const distance = rect.height - window.innerHeight;
+      const progress = clamp(-rect.top / distance);
+
+      const darkIn = range(progress, 0, 0.35);
+      const darkEase = darkIn * darkIn * (3 - 2 * darkIn);
+      const heroExit = range(progress, 0.86, 0.98);
+      const heroExitEase = heroExit * heroExit * (3 - 2 * heroExit);
+      const bg = Math.round(lerp(lerp(255, 5, darkEase), 255, heroExitEase));
+      heroPin.style.background = `rgb(${bg},${bg},${bg})`;
+
+      const navBackToBlack = range(progress, 0.48, 0.62);
+      const navWhite = darkEase * (1 - navBackToBlack);
+      logoWhite.style.opacity = navWhite.toFixed(3);
+      const fg = Math.round(lerp(5, 255, navWhite));
+      menuLines.forEach(line => { line.style.background = `rgb(${fg},${fg},${fg})`; });
+
+      const videoIn = range(progress, 0.28, 0.50);
+      const videoOpacity = videoIn * (1 - heroExitEase);
+      heroWrap.style.opacity = videoOpacity.toFixed(3);
+
+      const expand = range(progress, 0.48, 0.82);
+      const expandEase = expand * expand * (3 - 2 * expand);
+      const vMargin = lerp(15, 0, expandEase);
+      const hMargin = lerp(14, 0, expandEase);
+      const radius = Math.round(lerp(20, 0, expandEase));
+      heroWrap.style.inset = `${vMargin.toFixed(2)}vh ${hMargin.toFixed(2)}vw`;
+      heroWrap.style.borderRadius = `${radius}px`;
+
+      if (heroExpanded && Math.abs(window.scrollY - heroAudioStartY) >= 32) {
+        heroExpanded = false;
+        heroWrap.classList.remove('is-expanding');
+        stopHeroAudio();
+      }
+
+      if (!heroExpanded && playBtn) {
+        playBtn.style.opacity = videoOpacity.toFixed(3);
+        playBtn.style.pointerEvents = videoOpacity > 0.6 ? 'auto' : 'none';
+      }
+    }
+
+    function drawIntro() {
+      const rect = intro.getBoundingClientRect();
+      const distance = rect.height - window.innerHeight;
+      const progress = clamp(-rect.top / distance);
+
+      const seedShrink = range(progress, 0, .34);
+      const seedRise = range(progress, .34, .52);
+      const seedScale = lerp(1.0, 0.2914, seedShrink) * lerp(1, .72, seedRise);
+      const seedY = lerp(window.innerHeight * .50, window.innerHeight * .02, seedShrink) + lerp(0, -window.innerHeight * .35, seedRise);
+      const seedOpacity = 1 - range(progress, .50, .58);
+      const rainOpacity = 1 - range(progress, .015, .055);
+
+      seed.style.opacity = seedOpacity.toFixed(3);
+      seed.style.transform = `translate(-50%, -50%) translate3d(0, ${seedY}px, 0) scale(${seedScale}) rotate(-1deg)`;
+      if (seedRainCanvas) {
+        seedRainCanvas.style.opacity = rainOpacity.toFixed(3);
+        seedRainCanvas.style.visibility = rainOpacity <= 0 ? 'hidden' : 'visible';
+      }
+
+      const sloganIn = range(progress, .30, .44);
+      const sloganOut = range(progress, .76, .92);
+      slogan.style.opacity = (sloganIn * (1 - sloganOut)).toFixed(3);
+      slogan.style.transform = `translate(-50%, -50%) translate3d(0, ${lerp(20, 0, sloganIn)}px, 0)`;
+    }
+
+    function drawConnection() {
+      const rect = connSection.getBoundingClientRect();
+      const distance = rect.height - window.innerHeight;
+      const progress = clamp(-rect.top / distance);
+
+      const cameraZoom = range(progress, 0.38, 0.48);
+      const lastDot = connDots[connDots.length - 1];
+      const seedTwoOn = progress >= 0.54 ? 1 : 0;
+      const seedThreeOn = progress >= 0.70 ? 1 : 0;
+      const dotSceneOut = range(progress, 0.64, 0.68);
+      const restoreSceneIn = range(progress, RESTORE_REVEAL_START - 0.02, RESTORE_REVEAL_START);
+      const manifestoFourIn = range(progress, RESTORE_REVEAL_END, 1.00);
+      const sceneOut = range(progress, 0.82, 0.90);
+      const sceneBlur = lerp(0, 18, sceneOut);
+      const sceneOpacity = 1 - sceneOut;
+
+      connStage.style.transform = 'translate(-50%, -50%)';
+      connStage.style.filter = `blur(${sceneBlur.toFixed(1)}px)`;
+      connStage.style.opacity = sceneOpacity.toFixed(3);
+      connDots.forEach((dot, index) => {
+        const stagger = index * 0.018;
+        const show = range(progress, 0.02 + stagger, 0.16 + stagger);
+        const dotFade = (dot === lastDot ? (1 - seedTwoOn) : 1) * (1 - dotSceneOut);
+        dot.style.opacity = (show * dotFade).toFixed(3);
+        dot.style.transform = `translate(-50%, -50%) scale(${lerp(.35, 1, show)})`;
+      });
+
+      // Thread image contains the final connected line. Reveal it after the dots settle.
+      const threadDraw = range(progress, 0.16, 0.36);
+      connThread.style.clipPath = `inset(0 0 ${((1 - threadDraw) * 100).toFixed(2)}% 0)`;
+      connThread.style.opacity = '1';
+      connThread.style.filter = 'none';
+
+      // Left text rises in
+      const textIn = range(progress, 0.18, 0.36);
+      const textSwap = range(progress, 0.38, 0.42);
+      const manifestoIn = textSwap;
+      const secondTextIn = range(progress, 0.54, 0.58);
+      const thirdTextIn = range(progress, 0.70, 0.74);
+      connText.style.opacity = (textIn * (1 - textSwap)).toFixed(3);
+      connText.style.transform = `translateY(calc(-50% + ${lerp(16, 0, textIn).toFixed(1)}px))`;
+      manifestoText.style.opacity = (manifestoIn * (1 - secondTextIn)).toFixed(3);
+      manifestoText.style.transform = `translateY(calc(-50% + ${lerp(10, 0, manifestoIn).toFixed(1)}px))`;
+      manifestoSecond.style.opacity = (secondTextIn * (1 - thirdTextIn)).toFixed(3);
+      manifestoSecond.style.transform = 'translateY(-50%)';
+      manifestoThird.style.opacity = (thirdTextIn * sceneOpacity).toFixed(3);
+      manifestoThird.style.filter = `blur(${sceneBlur.toFixed(1)}px)`;
+      manifestoThird.style.transform = 'translateY(-50%)';
+      seedTwo.style.opacity = (seedTwoOn * (1 - seedThreeOn)).toFixed(3);
+      seedTwo.style.transform = 'translate(-50%, -50%)';
+      seedThree.style.opacity = seedThreeOn.toFixed(3);
+      seedThree.style.filter = 'none';
+      seedThree.style.transform = 'translate(-50%, -50%)';
+      restoreScene.style.opacity = restoreSceneIn.toFixed(3);
+      restoreScene.style.pointerEvents = 'none';
+      restoreCopy.style.opacity = manifestoFourIn.toFixed(3);
+      drawRestoreRing(progress);
+
+      if (lastDot) {
+        const dotRect = lastDot.getBoundingClientRect();
+        const dotCenterX = dotRect.left + dotRect.width / 2;
+        const dotCenterY = dotRect.top + dotRect.height / 2;
+        const targetX = window.innerWidth * 0.68;
+        const targetY = window.innerHeight * 0.47;
+        const zoomEase = cameraZoom * cameraZoom * (3 - 2 * cameraZoom);
+        const cameraScale = lerp(1, 5.2, zoomEase);
+        const moveX = lerp(0, targetX - dotCenterX, zoomEase);
+        const moveY = lerp(0, targetY - dotCenterY, zoomEase);
+
+        connStage.style.transform = `translate(-50%, -50%) translate(${moveX.toFixed(1)}px, ${moveY.toFixed(1)}px) scale(${cameraScale.toFixed(3)})`;
+      }
+    }
+
+    const restoreRingSeeds = [
+      { x: .50, y: .18, w: 74, r: 2, asset: 3 },
+      { x: .68, y: .226, w: 80, r: 14, asset: 2 },
+      { x: .812, y: .35, w: 62, r: 0, asset: 5 },
+      { x: .86, y: .52, w: 76, r: -6, asset: 6 },
+      { x: .812, y: .69, w: 78, r: 30, asset: 3 },
+      { x: .68, y: .814, w: 76, r: -16, asset: 4 },
+      { x: .50, y: .86, w: 64, r: -4, asset: 5 },
+      { x: .32, y: .814, w: 80, r: 32, asset: 1 },
+      { x: .188, y: .69, w: 72, r: -8, asset: 4 },
+      { x: .14, y: .52, w: 62, r: 0, asset: 5 },
+      { x: .188, y: .35, w: 104, r: -18, asset: 0 },
+      { x: .32, y: .226, w: 64, r: 6, asset: 5 }
+    ];
+
+    const RESTORE_REVEAL_START = 0.83;
+    const RESTORE_REVEAL_END = 0.97;
+    const RESTORE_OVERLAP = 1.6;
+    const restoreSeedStep = (RESTORE_REVEAL_END - RESTORE_REVEAL_START) / (restoreRingSeeds.length - 1 + RESTORE_OVERLAP);
+    const restoreSeedDuration = RESTORE_OVERLAP * restoreSeedStep;
+
+    function resizeRestoreCanvas() {
+      const width = restoreScene.offsetWidth || window.innerWidth;
+      const height = restoreScene.offsetHeight || window.innerHeight;
+      restoreCanvas.width = Math.round(width * window.devicePixelRatio);
+      restoreCanvas.height = Math.round(height * window.devicePixelRatio);
+      const ctx = restoreCanvas.getContext('2d');
+      ctx.setTransform(window.devicePixelRatio, 0, 0, window.devicePixelRatio, 0, 0);
+    }
+
+    function drawFallbackSeed(ctx, width, shape) {
+      const unit = width / 100;
+      ctx.scale(unit, unit);
+      ctx.fillStyle = '#1d7bbf';
+      ctx.beginPath();
+
+      if (shape === 0) {
+        ctx.ellipse(0, 0, 44, 44, 0, 0, Math.PI * 2);
+        ctx.fill();
+        ctx.globalCompositeOperation = 'destination-out';
+        ctx.beginPath();
+        ctx.ellipse(-6, 0, 26, 20, -0.1, 0, Math.PI * 2);
+        ctx.fill();
+        ctx.globalCompositeOperation = 'source-over';
+        ctx.beginPath();
+        ctx.ellipse(12, 0, 12, 10, 0, 0, Math.PI * 2);
+        ctx.fill();
+      } else if (shape === 1) {
+        ctx.ellipse(0, 0, 25, 42, 0.1, 0, Math.PI * 2);
+        ctx.fill();
+      } else if (shape === 2 || shape === 4) {
+        ctx.ellipse(0, 0, 50, 36, 0.1, 0, Math.PI * 2);
+        ctx.fill();
+      } else if (shape === 3) {
+        ctx.ellipse(0, 0, 48, 40, -0.35, 0, Math.PI * 2);
+        ctx.fill();
+      } else if (shape === 6) {
+        ctx.ellipse(0, 0, 42, 26, -0.05, 0, Math.PI * 2);
+        ctx.fill();
+      } else {
+        ctx.ellipse(0, 0, 35, 35, 0, 0, Math.PI * 2);
+        ctx.fill();
+      }
+    }
+
+    function drawRestoreSeed(ctx, x, y, width, angle, asset) {
+      ctx.save();
+      ctx.translate(x, y);
+      ctx.rotate(angle);
+
+      const image = restoreSeedImages[asset];
+      if (image && image.complete && image.naturalWidth) {
+        const aspect = image.naturalHeight / image.naturalWidth || 1;
+        ctx.drawImage(image, -width / 2, -width * aspect / 2, width, width * aspect);
+      } else {
+        drawFallbackSeed(ctx, width, asset);
+      }
+
+      ctx.restore();
+    }
+
+    function drawRestoreRing(progress) {
+      resizeRestoreCanvas();
+      const ctx = restoreCanvas.getContext('2d');
+      const width = restoreScene.offsetWidth || window.innerWidth;
+      const height = restoreScene.offsetHeight || window.innerHeight;
+      ctx.clearRect(0, 0, width, height);
+      restoreCanvas.style.opacity = '1';
+
+      restoreRingSeeds.forEach((seedConfig, index) => {
+        const start = RESTORE_REVEAL_START + index * restoreSeedStep;
+        const reveal = range(progress, start, start + restoreSeedDuration);
+        if (reveal <= 0) return;
+
+        const finalX = seedConfig.x * width;
+        const finalY = seedConfig.y * height;
+        const sizeScale = Math.min(width / 1280, height / 720);
+        const seedWidth = seedConfig.w * clamp(sizeScale, 0.72, 1.22) * reveal;
+
+        drawRestoreSeed(ctx, finalX, finalY, seedWidth, seedConfig.r * Math.PI / 180, seedConfig.asset);
+      });
+    }
+
+    function toggleMenu(force) {
+      const next = typeof force === 'boolean' ? force : !menuLayer.classList.contains('is-open');
+      menuLayer.classList.toggle('is-open', next);
+      menuButton.classList.toggle('is-open', next);
+      menuButton.setAttribute('aria-expanded', String(next));
+      menuButton.setAttribute('aria-label', next ? '메뉴 닫기' : '메뉴 열기');
+      menuLayer.setAttribute('aria-hidden', String(!next));
+      document.body.style.overflow = next ? 'hidden' : '';
+    }
+
+    playBtn.addEventListener('click', () => {
+      heroExpanded = true;
+      if (heroVideo) {
+        heroVideo.muted = false;
+        heroVideo.volume = 1;
+        heroVideo.play().catch(() => {});
+        heroAudioOn = true;
+        heroAudioStartY = window.scrollY;
+      }
+      heroWrap.classList.add('is-expanding');
+      heroWrap.style.inset = '0px';
+      heroWrap.style.borderRadius = '0px';
+      logoWhite.style.opacity = '0';
+      menuLines.forEach(line => { line.style.background = 'rgb(5,5,5)'; });
+      playBtn.style.opacity = '0';
+      playBtn.style.pointerEvents = 'none';
+    });
+
+    function stopHeroAudio() {
+      if (!heroAudioOn || !heroVideo) return;
+      heroVideo.pause();
+      heroVideo.muted = true;
+      heroAudioOn = false;
+    }
+
+    function updateHeroAudioOnScroll() {
+      if (!heroVideo || !heroSection) return;
+      const rect = heroSection.getBoundingClientRect();
+      const inHeroFocus = rect.top < window.innerHeight * 0.55 && rect.bottom > window.innerHeight * 0.45;
+
+      if (heroAudioOn && !inHeroFocus) {
+        stopHeroAudio();
+      }
+    }
+
+    menuButton.addEventListener('click', () => toggleMenu());
+    menuLinks.forEach((link) => link.addEventListener('click', () => toggleMenu(false)));
+    window.addEventListener('keydown', (event) => {
+      if (event.key === 'Escape') toggleMenu(false);
+    });
+
+    let ticking = false;
+    function requestDraw() {
+      if (ticking) return;
+      ticking = true;
+      requestAnimationFrame(() => {
+        drawIntro();
+        drawConnection();
+        drawHero();
+        ticking = false;
+      });
+    }
+
+    window.addEventListener('scroll', requestDraw, { passive: true });
+    window.addEventListener('scroll', updateHeroAudioOnScroll, { passive: true });
+    window.addEventListener('resize', requestDraw);
+    window.addEventListener('resize', resizeRestoreCanvas);
+    drawIntro();
+    drawConnection();
+    drawHero();
+
+    (function initSeedRain() {
+      const rainCanvas = seedRainCanvas;
+      if (!rainCanvas) return;
+
+      const ctx = rainCanvas.getContext('2d');
+      const seedSources = ['pdf/seed_1.svg', 'pdf/seed_2.svg', 'pdf/seed_3.svg', 'pdf/seed_4.svg', 'seed_5.svg'];
+      const seedImages = seedSources.map((src) => {
+        const image = new Image();
+        image.src = src;
+        return image;
+      });
+
+      let width = 0;
+      let height = 0;
+      let rafId = null;
+      let spawned = 0;
+      const particles = [];
+      const maxSeeds = 26;
+      const gravity = 0.32;
+
+      function resizeRain() {
+        width = rainCanvas.offsetWidth || window.innerWidth;
+        height = rainCanvas.offsetHeight || window.innerHeight;
+        rainCanvas.width = Math.round(width * window.devicePixelRatio);
+        rainCanvas.height = Math.round(height * window.devicePixelRatio);
+        ctx.setTransform(window.devicePixelRatio, 0, 0, window.devicePixelRatio, 0, 0);
+      }
+
+      function introProgress() {
+        const rect = intro.getBoundingClientRect();
+        const distance = rect.height - window.innerHeight;
+        return clamp(-rect.top / distance);
+      }
+
+      function seedSurfaceAt(x) {
+        const rect = seed.getBoundingClientRect();
+        const rx = rect.width * 0.48;
+        const ry = rect.height * 0.46;
+        const cx = rect.left + rect.width / 2;
+        const cy = rect.top + rect.height / 2;
+        const dx = (x - cx) / rx;
+        if (Math.abs(dx) > 0.98) return null;
+        const root = Math.sqrt(1 - dx * dx);
+
+        return {
+          y: cy - ry * root,
+          slope: (ry * dx) / (rx * Math.max(root, 0.08)),
+          centerX: cx,
+          dx
+        };
+      }
+
+      function spawnSeed() {
+        const imageIndex = Math.floor(Math.random() * seedImages.length);
+        const size = 66 + Math.random() * 138;
+        particles.push({
+          imageIndex,
+          size,
+          x: size * 0.65 + Math.random() * Math.max(1, width - size * 1.3),
+          y: -size - Math.random() * height * 0.35,
+          vx: (Math.random() - 0.5) * 0.9,
+          vy: 1.1 + Math.random() * 2.2,
+          angle: Math.random() * Math.PI * 2,
+          av: (Math.random() - 0.5) * 0.08,
+          surfaceHits: 0,
+          surfaceCooldown: 0,
+          slidePush: 0,
+          squash: 0,
+          settled: false
+        });
+      }
+
+      function drawSeedParticle(particle, alpha) {
+        const image = seedImages[particle.imageIndex];
+        if (!image.complete || !image.naturalWidth) return;
+
+        ctx.save();
+        ctx.globalAlpha = alpha;
+        ctx.translate(particle.x, particle.y);
+        ctx.rotate(particle.angle);
+        if (particle.squash > 0) {
+          ctx.scale(1 + particle.squash * 0.28, 1 - particle.squash * 0.22);
+        }
+        ctx.drawImage(image, -particle.size / 2, -particle.size / 2, particle.size, particle.size);
+        ctx.restore();
+      }
+
+      function tickRain() {
+        const progress = introProgress();
+        const fadeOut = 1 - range(progress, 0.015, 0.055);
+        const seedIsVisible = progress < 0.58;
+
+        ctx.clearRect(0, 0, width, height);
+
+        if (fadeOut <= 0) {
+          particles.length = 0;
+          rafId = null;
+          return;
+        }
+
+        for (const particle of particles) {
+          if (!particle.settled) {
+            particle.vy += gravity;
+            particle.x += particle.vx;
+            particle.y += particle.vy;
+            particle.angle += particle.av;
+            particle.av *= 0.94;
+            particle.vx *= 0.992;
+            particle.surfaceCooldown = Math.max(0, particle.surfaceCooldown - 1);
+          }
+          particle.squash = Math.max(0, particle.squash - 0.075);
+
+          if (particle.x < particle.size * 0.35) {
+            particle.x = particle.size * 0.35;
+            particle.vx = Math.abs(particle.vx) * 0.42;
+            particle.av *= 0.45;
+          } else if (particle.x > width - particle.size * 0.35) {
+            particle.x = width - particle.size * 0.35;
+            particle.vx = -Math.abs(particle.vx) * 0.42;
+            particle.av *= 0.45;
+          }
+
+          const surface = seedIsVisible ? seedSurfaceAt(particle.x) : null;
+          const bottom = particle.y + particle.size * 0.42;
+          if (
+            !particle.settled &&
+            particle.surfaceHits < 1 &&
+            particle.surfaceCooldown <= 0 &&
+            surface &&
+            bottom > surface.y &&
+            particle.vy > 0
+          ) {
+            const fallbackDirection = particle.x < surface.centerX ? -1 : 1;
+            const downhill = Math.abs(surface.slope) > 0.05 ? Math.sign(surface.slope) : fallbackDirection;
+            const slideForce = 3.2 + Math.abs(surface.slope) * 2.2 + particle.slidePush * 0.18;
+
+            particle.y = surface.y - particle.size * 0.42;
+            particle.vx = downhill * Math.max(Math.abs(particle.vx) + slideForce, 3.8);
+            particle.vy = 1.2 + Math.abs(surface.slope) * 2.6;
+            particle.av += particle.vx * 0.006;
+            particle.surfaceHits += 1;
+            particle.surfaceCooldown = 22;
+            particle.slidePush += 1;
+            particle.squash = 0.55;
+          }
+
+          const floorY = height - particle.size * 0.48;
+          if (!particle.settled && particle.y > floorY) {
+            particle.y = floorY;
+            particle.vy = 0;
+            particle.vx *= 0.86;
+            particle.av *= 0.72;
+
+            if (Math.abs(particle.vx) < 0.06 && Math.abs(particle.av) < 0.004) {
+              particle.settled = true;
+              particle.vx = 0;
+              particle.vy = 0;
+              particle.av = 0;
+            }
+          }
+
+          drawSeedParticle(particle, fadeOut);
+        }
+
+        for (let i = particles.length - 1; i >= 0; i--) {
+          if (particles[i].y > height + particles[i].size * 1.5) {
+            particles.splice(i, 1);
+          }
+        }
+
+        if (fadeOut > 0 && (particles.length || spawned < maxSeeds)) {
+          rafId = requestAnimationFrame(tickRain);
+        } else {
+          rafId = null;
+          ctx.clearRect(0, 0, width, height);
+        }
+      }
+
+      function startRain() {
+        if (rafId) return;
+        rafId = requestAnimationFrame(tickRain);
+      }
+
+      function scheduleSeeds() {
+        if (spawned >= maxSeeds) return;
+        spawnSeed();
+        spawned += 1;
+        startRain();
+        window.setTimeout(scheduleSeeds, 70 + Math.random() * 150);
+      }
+
+      window.addEventListener('resize', resizeRain);
+      window.addEventListener('scroll', () => {
+        if (introProgress() < 0.055) startRain();
+      }, { passive: true });
+
+      resizeRain();
+      scheduleSeeds();
+    })();
+  </script>
+</body>
+</html>
