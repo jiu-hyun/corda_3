@@ -862,7 +862,7 @@
       const seedScale = lerp(1.0, 0.2914, seedShrink) * lerp(1, .72, seedRise);
       const seedY = lerp(window.innerHeight * .50, window.innerHeight * .02, seedShrink) + lerp(0, -window.innerHeight * .35, seedRise);
       const seedOpacity = 1 - range(progress, .50, .58);
-      const rainOpacity = 1 - range(progress, .015, .055);
+      const rainOpacity = 1 - range(progress, .08, .20);
 
       seed.style.opacity = seedOpacity.toFixed(3);
       seed.style.transform = `translate(-50%, -50%) translate3d(0, ${seedY}px, 0) scale(${seedScale}) rotate(-1deg)`;
@@ -1213,7 +1213,7 @@
 
       function tickRain() {
         const progress = introProgress();
-        const fadeOut = 1 - range(progress, 0.015, 0.055);
+        const fadeOut = 1 - range(progress, 0.08, 0.20);
         const seedIsVisible = progress < 0.58;
 
         ctx.clearRect(0, 0, width, height);
@@ -1307,6 +1307,12 @@
         rafId = requestAnimationFrame(tickRain);
       }
 
+      function resetRain() {
+        particles.length = 0;
+        spawned = 0;
+        ctx.clearRect(0, 0, width, height);
+      }
+
       function scheduleSeeds() {
         if (spawned >= maxSeeds) return;
         spawnSeed();
@@ -1317,7 +1323,12 @@
 
       window.addEventListener('resize', resizeRain);
       window.addEventListener('scroll', () => {
-        if (introProgress() < 0.055) startRain();
+        const progress = introProgress();
+        if (progress < 0.08 && spawned >= maxSeeds && !particles.length) {
+          resetRain();
+          scheduleSeeds();
+        }
+        if (progress < 0.20) startRain();
       }, { passive: true });
 
       resizeRain();
